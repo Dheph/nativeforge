@@ -71,6 +71,7 @@ var package_default = {
 var import_prompts2 = require("@clack/prompts");
 var import_child_process = require("child_process");
 var import_path2 = __toESM(require("path"), 1);
+var import_fs_extra2 = __toESM(require("fs-extra"), 1);
 
 // src/commands/add.ts
 var import_fs_extra = __toESM(require("fs-extra"), 1);
@@ -101,11 +102,16 @@ var registryIndexSchema = import_zod.z.array(
   })
 );
 async function getRegistryComponent(name) {
+  const url = `${REGISTRY_URL}/components/${name}.json`;
   try {
-    const data = await (0, import_ofetch.ofetch)(`${REGISTRY_URL}/components/${name}.json`);
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status} ${response.statusText} at ${url}`);
+    }
+    const data = await response.json();
     return registryItemSchema.parse(data);
   } catch (error) {
-    throw new Error(`Failed to fetch component ${name} from registry.`);
+    throw new Error(`Failed to fetch component ${name} from registry. Error: ${error.message}`);
   }
 }
 
@@ -183,25 +189,29 @@ async function addCommand(components, options) {
 }
 
 // src/commands/init.ts
-async function initCommand() {
+async function initCommand(options) {
   (0, import_prompts2.intro)(`Initializing NativeForge Project...`);
-  const projectName = await (0, import_prompts2.text)({
-    message: "What is your project named?",
-    placeholder: "my-app",
-    initialValue: "my-app"
-  });
-  if (typeof projectName === "symbol") {
-    process.exit(0);
+  let projectName = options.name;
+  if (!projectName) {
+    const input = await (0, import_prompts2.text)({
+      message: "What is your project named?",
+      placeholder: "my-app",
+      initialValue: "my-app"
+    });
+    if (typeof input === "symbol") process.exit(0);
+    projectName = input;
   }
-  const templateOption = await (0, import_prompts2.select)({
-    message: "Do you want to start with a base template?",
-    options: [
-      { value: "template-login", label: "Login Template (Firebase Auth + UI Base)" },
-      { value: "none", label: "Empty Project" }
-    ]
-  });
-  if (typeof templateOption === "symbol") {
-    process.exit(0);
+  let templateOption = options.template;
+  if (!templateOption) {
+    const input = await (0, import_prompts2.select)({
+      message: "Do you want to start with a base template?",
+      options: [
+        { value: "template-login", label: "Login Template (Firebase Auth + UI Base)" },
+        { value: "none", label: "Empty Project" }
+      ]
+    });
+    if (typeof input === "symbol") process.exit(0);
+    templateOption = input;
   }
   const s = (0, import_prompts2.spinner)();
   s.start(`Creating Expo project ${projectName}... (this may take a minute)`);
@@ -216,9 +226,8 @@ async function initCommand() {
 Adding ${templateOption} to your project...`);
       await addCommand([templateOption], { cwd: projectDir, skipPrompts: true });
       if (templateOption === "template-login") {
-        const fs2 = await import("fs-extra");
         const appTsxPath = import_path2.default.join(projectDir, "App.tsx");
-        if (await fs2.pathExists(appTsxPath)) {
+        if (await import_fs_extra2.default.pathExists(appTsxPath)) {
           const appContent = `import { SafeAreaView } from 'react-native';
 import LoginTemplate from './src/components/templates/login';
 
@@ -230,7 +239,7 @@ export default function App() {
   );
 }
 `;
-          await fs2.writeFile(appTsxPath, appContent, "utf-8");
+          await import_fs_extra2.default.writeFile(appTsxPath, appContent, "utf-8");
         }
       }
     }
@@ -246,6 +255,6 @@ var { version } = package_default;
 var program = new import_commander.Command();
 program.name("nativeforge").description("The ultimate CLI for scaffolding React Native and Expo architectures.").version(version);
 program.command("add [components...]").description("Add components to your project").action(addCommand);
-program.command("init").description("Initialize a new NativeForge project").action(initCommand);
+program.command("init").description("Initialize a new NativeForge project").option("-n, --name <name>", "Project name").option("-t, --template <template>", "Base template (e.g. template-login)").action(initCommand);
 program.parse();
 //# sourceMappingURL=index.cjs.map

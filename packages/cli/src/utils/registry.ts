@@ -40,10 +40,16 @@ export async function getRegistryIndex(): Promise<RegistryIndex> {
 }
 
 export async function getRegistryComponent(name: string): Promise<RegistryItem> {
+  const url = `${REGISTRY_URL}/components/${name}.json`;
   try {
-    const data = await ofetch(`${REGISTRY_URL}/components/${name}.json`);
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status} ${response.statusText} at ${url}`);
+    }
+
+    const data = await response.json();
     return registryItemSchema.parse(data);
-  } catch (error) {
-    throw new Error(`Failed to fetch component ${name} from registry.`);
+  } catch (error: any) {
+    throw new Error(`Failed to fetch component ${name} from registry. Error: ${error.message}`);
   }
 }

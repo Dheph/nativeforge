@@ -22,6 +22,8 @@ program
 program
   .command('init')
   .description('Initialize a new NativeForge project')
+  .option('-n, --name <name>', 'Project name')
+  .option('-t, --template <template>', 'Base template (e.g. template-login)')
   .action(initCommand);
 
 program.parse();

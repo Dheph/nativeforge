@@ -1,0 +1,24 @@
+{
+  "name": "@nativeforge/registry",
+  "version": "0.1.0",
+  "description": "Registry of components and templates for NativeForge",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "zod": "^3.22.0",
+    "fs-extra": "^11.2.0",
+    "glob": "^10.3.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "tsup": "^8.0.0",
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^20.0.0"
+  }
+}

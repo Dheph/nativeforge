@@ -1,0 +1,12 @@
+{
+  "name": "template-login",
+  "type": "template",
+  "dependencies": [],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "components/templates/login/index.tsx",
+      "content": "import React, { useState } from 'react';\nimport { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';\n\nexport default function LoginTemplate() {\n  const [email, setEmail] = useState('');\n  const [password, setPassword] = useState('');\n\n  const handleLogin = () => {\n    console.log('Login attempt with', email, password);\n  };\n\n  return (\n    <View style={styles.container}>\n      <Text style={styles.title}>Welcome Back</Text>\n      \n      <View style={styles.form}>\n        <TextInput\n          style={styles.input}\n          placeholder=\"Email\"\n          value={email}\n          onChangeText={setEmail}\n          keyboardType=\"email-address\"\n          autoCapitalize=\"none\"\n        />\n        \n        <TextInput\n          style={styles.input}\n          placeholder=\"Password\"\n          value={password}\n          onChangeText={setPassword}\n          secureTextEntry\n        />\n        \n        <TouchableOpacity style={styles.button} onPress={handleLogin}>\n          <Text style={styles.buttonText}>Log In</Text>\n        </TouchableOpacity>\n      </View>\n    </View>\n  );\n}\n\nconst styles = StyleSheet.create({\n  container: {\n    flex: 1,\n    padding: 24,\n    justifyContent: 'center',\n    backgroundColor: '#fff',\n  },\n  title: {\n    fontSize: 28,\n    fontWeight: 'bold',\n    marginBottom: 32,\n    textAlign: 'center',\n  },\n  form: {\n    gap: 16,\n  },\n  input: {\n    height: 50,\n    borderWidth: 1,\n    borderColor: '#e2e8f0',\n    borderRadius: 8,\n    paddingHorizontal: 16,\n    fontSize: 16,\n  },\n  button: {\n    height: 50,\n    backgroundColor: '#0f172a',\n    borderRadius: 8,\n    justifyContent: 'center',\n    alignItems: 'center',\n    marginTop: 16,\n  },\n  buttonText: {\n    color: '#fff',\n    fontSize: 16,\n    fontWeight: '600',\n  },\n});\n"
+    }
+  ]
+}

@@ -33,7 +33,8 @@ export type RegistryIndex = z.infer<typeof registryIndexSchema>;
 export async function getRegistryIndex(): Promise<RegistryIndex> {
   try {
     const data = await ofetch(`${REGISTRY_URL}/index.json`);
-    return registryIndexSchema.parse(data);
+    const parsedData = typeof data === 'string' ? JSON.parse(data) : data;
+    return registryIndexSchema.parse(parsedData);
   } catch (error) {
     throw new Error('Failed to fetch registry index.');
   }

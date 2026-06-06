@@ -75,7 +75,8 @@ var registryIndexSchema = z.array(
 async function getRegistryIndex() {
   try {
     const data = await ofetch(`${REGISTRY_URL}/index.json`);
-    return registryIndexSchema.parse(data);
+    const parsedData = typeof data === "string" ? JSON.parse(data) : data;
+    return registryIndexSchema.parse(parsedData);
   } catch (error) {
     throw new Error("Failed to fetch registry index.");
   }

@@ -1,6 +1,7 @@
 node_modules
 .pnpm-store
 dist
+!packages/registry/dist
 build
 .turbo
 .DS_Store

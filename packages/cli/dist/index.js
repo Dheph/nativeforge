@@ -192,6 +192,24 @@ async function initCommand() {
       console.log(`
 Adding ${templateOption} to your project...`);
       await addCommand([templateOption], { cwd: projectDir, skipPrompts: true });
+      if (templateOption === "template-login") {
+        const fs2 = await import("fs-extra");
+        const appTsxPath = path2.join(projectDir, "App.tsx");
+        if (await fs2.pathExists(appTsxPath)) {
+          const appContent = `import { SafeAreaView } from 'react-native';
+import LoginTemplate from './src/components/templates/login';
+
+export default function App() {
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+      <LoginTemplate />
+    </SafeAreaView>
+  );
+}
+`;
+          await fs2.writeFile(appTsxPath, appContent, "utf-8");
+        }
+      }
     }
     outro2(`Your project is ready! Run: cd ${projectName} && npx expo start`);
   } catch (error) {

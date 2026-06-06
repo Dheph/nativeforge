@@ -14,10 +14,37 @@
     "registryDependencies": []
   },
   {
+    "name": "service-auth",
+    "type": "service",
+    "dependencies": [
+      "zustand",
+      "@react-native-async-storage/async-storage"
+    ],
+    "registryDependencies": []
+  },
+  {
     "name": "service-firebase-auth",
     "type": "service",
     "dependencies": [
       "firebase",
+      "zustand",
+      "@react-native-async-storage/async-storage"
+    ],
+    "registryDependencies": []
+  },
+  {
+    "name": "service-supabase-auth",
+    "type": "service",
+    "dependencies": [
+      "zustand",
+      "@react-native-async-storage/async-storage"
+    ],
+    "registryDependencies": []
+  },
+  {
+    "name": "service-api-auth",
+    "type": "service",
+    "dependencies": [
       "zustand",
       "@react-native-async-storage/async-storage"
     ],
@@ -34,7 +61,7 @@
     "registryDependencies": [
       "ui-button",
       "ui-input",
-      "service-firebase-auth"
+      "service-auth"
     ]
   }
 ]

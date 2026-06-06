@@ -36,6 +36,18 @@ const componentsToBuild = [
     ]
   },
   {
+    name: 'service-auth',
+    type: 'service',
+    dependencies: ['zustand', '@react-native-async-storage/async-storage'],
+    registryDependencies: [],
+    files: [
+      {
+        path: 'services/auth/index.tsx',
+        target: 'services/auth/index.tsx'
+      }
+    ]
+  },
+  {
     name: 'service-firebase-auth',
     type: 'service',
     dependencies: ['firebase', 'zustand', '@react-native-async-storage/async-storage'],
@@ -43,7 +55,31 @@ const componentsToBuild = [
     files: [
       {
         path: 'services/firebase-auth/index.tsx',
-        target: 'services/firebase-auth/index.tsx'
+        target: 'services/auth/provider.tsx'
+      }
+    ]
+  },
+  {
+    name: 'service-supabase-auth',
+    type: 'service',
+    dependencies: ['zustand', '@react-native-async-storage/async-storage'],
+    registryDependencies: [],
+    files: [
+      {
+        path: 'services/supabase-auth/index.tsx',
+        target: 'services/auth/provider.tsx'
+      }
+    ]
+  },
+  {
+    name: 'service-api-auth',
+    type: 'service',
+    dependencies: ['zustand', '@react-native-async-storage/async-storage'],
+    registryDependencies: [],
+    files: [
+      {
+        path: 'services/api-auth/index.tsx',
+        target: 'services/auth/provider.tsx'
       }
     ]
   },
@@ -51,7 +87,7 @@ const componentsToBuild = [
     name: 'template-auth',
     type: 'template',
     dependencies: ['expo-router', 'react-native-safe-area-context', 'react-native-screens'],
-    registryDependencies: ['ui-button', 'ui-input', 'service-firebase-auth'],
+    registryDependencies: ['ui-button', 'ui-input', 'service-auth'],
     files: [
       { path: 'templates/login/components/templates/login/index.tsx', target: 'components/templates/login/index.tsx' },
       { path: 'templates/login/components/templates/register/index.tsx', target: 'components/templates/register/index.tsx' },
@@ -62,7 +98,8 @@ const componentsToBuild = [
       { path: 'templates/login/app/(auth)/register.tsx', target: 'app/(auth)/register.tsx' },
       { path: 'templates/login/app/(auth)/forgot-password.tsx', target: 'app/(auth)/forgot-password.tsx' },
       { path: 'templates/login/app/(app)/_layout.tsx', target: 'app/(app)/_layout.tsx' },
-      { path: 'templates/login/app/(app)/index.tsx', target: 'app/(app)/index.tsx' }
+      { path: 'templates/login/app/(app)/index.tsx', target: 'app/(app)/index.tsx' },
+      { path: 'templates/login/app/(app)/profile.tsx', target: 'app/(app)/profile.tsx' }
     ]
   }
 ];

@@ -1,32 +1,13 @@
 import { create } from 'zustand';
-import { initializeApp, getApp, getApps } from 'firebase/app';
-import { 
-  initializeAuth, 
-  // @ts-ignore
-  getReactNativePersistence,
-  User,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut as fbSignOut
-} from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// 1. Configure as variáveis de ambiente no seu .env ou app.json do Expo
-// 2. Se as credenciais forem dummy, a aplicação iniciará, mas as chamadas falharão.
-const firebaseConfig = {
-  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY || "dummy_api_key",
-  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN || "dummy_domain",
-  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID || "dummy_id",
-  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET || "dummy_bucket",
-  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "dummy_sender",
-  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID || "dummy_app_id"
-};
+// TODO: Implement actual Supabase Auth logic here
+// import { supabase } from '../lib/supabase';
 
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-
-const auth = initializeAuth(app, {
-  persistence: getReactNativePersistence(AsyncStorage)
-});
+interface User {
+  id: string;
+  email?: string;
+}
 
 interface AuthState {
   user: User | null;
@@ -50,8 +31,10 @@ export const useAuthStore = create<AuthState>((set) => ({
   signIn: async (email, pass) => {
     set({ isLoading: true, error: null });
     try {
-      const cred = await signInWithEmailAndPassword(auth, email, pass);
-      set({ user: cred.user, isLoading: false });
+      console.log('Supabase signIn', email);
+      // const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
+      // if (error) throw error;
+      set({ user: { id: 'dummy', email }, isLoading: false });
     } catch (e: any) {
       set({ error: e.message, isLoading: false });
     }
@@ -60,8 +43,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   signUp: async (email, pass) => {
     set({ isLoading: true, error: null });
     try {
-      const cred = await createUserWithEmailAndPassword(auth, email, pass);
-      set({ user: cred.user, isLoading: false });
+      console.log('Supabase signUp', email);
+      set({ user: { id: 'dummy', email }, isLoading: false });
     } catch (e: any) {
       set({ error: e.message, isLoading: false });
     }
@@ -70,7 +53,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   signOut: async () => {
     set({ isLoading: true, error: null });
     try {
-      await fbSignOut(auth);
+      console.log('Supabase signOut');
       set({ user: null, isLoading: false });
     } catch (e: any) {
       set({ error: e.message, isLoading: false });
@@ -80,8 +63,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   resetPassword: async (email) => {
     set({ isLoading: true, error: null });
     try {
-      // Implement Firebase reset password here
-      console.log('Resetting password for', email);
+      console.log('Supabase resetPassword', email);
       set({ isLoading: false });
     } catch (e: any) {
       set({ error: e.message, isLoading: false });
@@ -91,8 +73,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   signInWithGoogle: async () => {
     set({ isLoading: true, error: null });
     try {
-      // Implement Google Sign In here
-      console.log('Signing in with Google');
+      console.log('Supabase signInWithGoogle');
       set({ isLoading: false });
     } catch (e: any) {
       set({ error: e.message, isLoading: false });
@@ -102,8 +83,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   signInWithApple: async () => {
     set({ isLoading: true, error: null });
     try {
-      // Implement Apple Sign In here
-      console.log('Signing in with Apple');
+      console.log('Supabase signInWithApple');
       set({ isLoading: false });
     } catch (e: any) {
       set({ error: e.message, isLoading: false });
@@ -113,8 +93,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   signInWithGithub: async () => {
     set({ isLoading: true, error: null });
     try {
-      // Implement Github Sign In here
-      console.log('Signing in with Github');
+      console.log('Supabase signInWithGithub');
       set({ isLoading: false });
     } catch (e: any) {
       set({ error: e.message, isLoading: false });
@@ -123,10 +102,3 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   clearError: () => set({ error: null })
 }));
-
-// Setup auth state listener on module load
-auth.onAuthStateChanged((user) => {
-  useAuthStore.setState({ user });
-});
-
-export { auth, app };

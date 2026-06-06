@@ -1,0 +1,15 @@
+{
+  "name": "service-auth",
+  "type": "service",
+  "dependencies": [
+    "zustand",
+    "@react-native-async-storage/async-storage"
+  ],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "services/auth/index.tsx",
+      "content": "export * from './provider';\n"
+    }
+  ]
+}

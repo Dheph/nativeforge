@@ -19,19 +19,20 @@ importers:
         version: 5.9.3
 
   packages/cli:
-    devDependencies:
+    dependencies:
       '@clack/prompts':
         specifier: ^0.7.0
         version: 0.7.0
+      commander:
+        specifier: ^12.0.0
+        version: 12.1.0
+    devDependencies:
       '@types/fs-extra':
         specifier: ^11.0.4
         version: 11.0.4
       '@types/node':
         specifier: ^20.0.0
         version: 20.19.42
-      commander:
-        specifier: ^12.0.0
-        version: 12.1.0
       fs-extra:
         specifier: ^11.2.0
         version: 11.3.5

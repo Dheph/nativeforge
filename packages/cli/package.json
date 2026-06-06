@@ -21,13 +21,14 @@
   ],
   "author": "",
   "license": "MIT",
-  "dependencies": {},
+  "dependencies": {
+    "commander": "^12.0.0",
+    "@clack/prompts": "^0.7.0"
+  },
   "devDependencies": {
     "typescript": "^5.0.0",
     "tsup": "^8.0.0",
     "vitest": "^1.0.0",
-    "commander": "^12.0.0",
-    "@clack/prompts": "^0.7.0",
     "fs-extra": "^11.2.0",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^20.0.0"

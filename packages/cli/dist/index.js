@@ -47,7 +47,7 @@ var package_default = {
 // src/commands/add.ts
 import fs from "fs-extra";
 import path from "path";
-import { intro, outro, spinner, text, confirm } from "@clack/prompts";
+import { intro, outro, spinner, confirm } from "@clack/prompts";
 
 // src/utils/registry.ts
 import { ofetch } from "ofetch";
@@ -72,6 +72,14 @@ var registryIndexSchema = z.array(
     registryDependencies: z.array(z.string()).optional()
   })
 );
+async function getRegistryIndex() {
+  try {
+    const data = await ofetch(`${REGISTRY_URL}/index.json`);
+    return registryIndexSchema.parse(data);
+  } catch (error) {
+    throw new Error("Failed to fetch registry index.");
+  }
+}
 async function getRegistryComponent(name) {
   const url = `${REGISTRY_URL}/components/${name}.json`;
   try {
@@ -93,14 +101,34 @@ async function addCommand(components, options) {
     intro(`Installing components...`);
   }
   if (!components || components.length === 0) {
-    const input = await text({
-      message: "Which components would you like to add? (comma-separated)",
-      placeholder: "template-login, button"
+    const s = spinner();
+    s.start("Fetching available components from registry...");
+    let registryIndex;
+    try {
+      registryIndex = await getRegistryIndex();
+      s.stop("Registry fetched successfully!");
+    } catch (e) {
+      s.stop("Failed to fetch registry.");
+      console.error(e.message);
+      process.exit(1);
+    }
+    registryIndex.sort((a, b) => {
+      if (a.type !== b.type) return a.type.localeCompare(b.type);
+      return a.name.localeCompare(b.name);
+    });
+    const { multiselect: multiselect2 } = await import("@clack/prompts");
+    const input = await multiselect2({
+      message: "Which components would you like to add? (Space to select, Enter to confirm)",
+      options: registryIndex.map((item) => ({
+        value: item.name,
+        label: `${item.name} [${item.type}]`
+      })),
+      required: true
     });
     if (typeof input === "symbol") {
       process.exit(0);
     }
-    components = input.split(",").map((c) => c.trim());
+    components = input;
   }
   if ((components.includes("template-auth") || components.includes("service-auth")) && !options?.authProvider) {
     const { select: select2, multiselect: multiselect2 } = await import("@clack/prompts");
@@ -309,8 +337,8 @@ program.name("nativeforge").description("The ultimate CLI for scaffolding React 
 program.command("add [components...]").description("Add components to your project").action(addCommand);
 program.command("init [name]").description("Initialize a new NativeForge project").option("-t, --template <template>", "Base template (e.g. template-auth)").action(async (name, options) => {
   if (process.env.CI_TEST) {
-    name = "test";
-    options.template = "template-auth";
+    name = name || "test";
+    options.template = options.template || "template-auth";
   }
   await initCommand({ name, ...options });
 });

@@ -25,8 +25,8 @@ program
   .option('-t, --template <template>', 'Base template (e.g. template-auth)')
   .action(async (name, options) => {
     if (process.env.CI_TEST) {
-      name = 'test';
-      options.template = 'template-auth';
+      name = name || 'test';
+      options.template = options.template || 'template-auth';
     }
     await initCommand({ name, ...options });
   });

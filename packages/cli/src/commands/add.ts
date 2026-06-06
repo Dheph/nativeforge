@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import { intro, outro, spinner, text, confirm } from '@clack/prompts';
-import { getRegistryComponent } from '../utils/registry.js';
+import { getRegistryComponent, getRegistryIndex } from '../utils/registry.js';
 
 export async function addCommand(components: string[], options?: { cwd?: string; skipPrompts?: boolean; socialProviders?: string[]; authProvider?: string }) {
   const targetCwd = options?.cwd || process.cwd();
@@ -11,16 +11,38 @@ export async function addCommand(components: string[], options?: { cwd?: string;
   }
 
   if (!components || components.length === 0) {
-    const input = await text({
-      message: 'Which components would you like to add? (comma-separated)',
-      placeholder: 'template-login, button',
+    const s = spinner();
+    s.start('Fetching available components from registry...');
+    let registryIndex;
+    try {
+      registryIndex = await getRegistryIndex();
+      s.stop('Registry fetched successfully!');
+    } catch (e: any) {
+      s.stop('Failed to fetch registry.');
+      console.error(e.message);
+      process.exit(1);
+    }
+
+    registryIndex.sort((a, b) => {
+      if (a.type !== b.type) return a.type.localeCompare(b.type);
+      return a.name.localeCompare(b.name);
+    });
+
+    const { multiselect } = await import('@clack/prompts');
+    const input = await multiselect({
+      message: 'Which components would you like to add? (Space to select, Enter to confirm)',
+      options: registryIndex.map((item) => ({
+        value: item.name,
+        label: `${item.name} [${item.type}]`,
+      })),
+      required: true,
     });
     
     if (typeof input === 'symbol') {
       process.exit(0);
     }
 
-    components = input.split(',').map((c) => c.trim());
+    components = input as string[];
   }
 
   // Ensure authProvider and socialProviders are asked if template-auth is added manually

@@ -15,7 +15,7 @@ export default function ProfileScreen() {
           </Text>
         </View>
         <Text style={styles.email}>{user?.email || 'User'}</Text>
-        <Text style={styles.userId}>ID: {user?.uid || user?.id || 'Unknown'}</Text>
+        <Text style={styles.userId}>ID: {(user as any)?.uid || (user as any)?.id || 'Unknown'}</Text>
       </View>
 
       <Button 

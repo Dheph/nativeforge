@@ -93,13 +93,9 @@ export default function LoginTemplate() {
 {/* END_SOCIAL_AUTH_ANY */}
         
         <View style={styles.linksContainer}>
-          <Button variant="ghost" onPress={() => router.push('/forgot-password')}>
-            Forgot Password?
-          </Button>
+          <Button variant="ghost" onPress={() => router.push('/forgot-password')} label="Forgot Password?" />
           
-          <Button variant="ghost" onPress={() => router.push('/register')}>
-            Create an Account
-          </Button>
+          <Button variant="ghost" onPress={() => router.push('/register')} label="Create an Account" />
         </View>
       </View>
     </View>

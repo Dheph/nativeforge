@@ -109,9 +109,7 @@ export default function RegisterTemplate() {
 {/* END_SOCIAL_AUTH_ANY */}
         
         <View style={styles.linksContainer}>
-          <Button variant="ghost" onPress={() => router.back()}>
-            Already have an account? Log In
-          </Button>
+          <Button variant="ghost" onPress={() => router.back()} label="Already have an account? Log In" />
         </View>
       </View>
     </View>

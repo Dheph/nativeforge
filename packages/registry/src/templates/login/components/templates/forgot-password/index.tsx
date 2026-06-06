@@ -50,9 +50,7 @@ export default function ForgotPasswordTemplate() {
         />
 
         <View style={styles.linksContainer}>
-          <Button variant="ghost" onPress={() => router.back()}>
-            Back to Login
-          </Button>
+          <Button variant="ghost" onPress={() => router.back()} label="Back to Login" />
         </View>
       </View>
     </View>

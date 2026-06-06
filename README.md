@@ -27,12 +27,61 @@ npx nativeforge init
 * You can choose an empty project or the **Auth Flow** template.
 * If choosing the Auth Flow, the CLI will ask for your preferred Auth Provider (e.g., Firebase) and automatically generate the protected routes (`(app)`) and public routes (`(auth)`).
 
-### 2. Add components to an existing project
-```sh
+### Add components
+
+Add a component to your project:
+
+```bash
+npx nativeforge add ui-button
+```
+
+Or run `add` interactively to see and pick what's available!
+
+```bash
 npx nativeforge add
 ```
-* Or add directly: `npx nativeforge add ui-button ui-input template-auth`
-* The CLI will automatically resolve dependencies and run `npx expo install` to keep your project ready to run.
+
+**Interactive Preview:**
+```text
+┌  Installing components...
+│
+◇  Registry fetched successfully!
+│
+◆  Which components would you like to add? (Space to select, Enter to confirm)
+│  ◻ ui-button [component]
+│  ◻ ui-input [component]
+│  ◻ service-api-auth [service]
+│  ◻ service-firebase-auth [service]
+│  ◻ service-supabase-auth [service]
+│  ◻ template-auth [template]
+└
+```
+
+**Looking for the full list of components?**
+Check out the [Registry Documentation](./docs/registry.md) for details on all available UI components, backend services, and templates.
+
+---
+
+### Local Testing (Contributors)
+
+If you are contributing to NativeForge and want to test changes locally without publishing to NPM, follow these steps:
+
+1. In the `packages/registry` directory, build the registry and start the local python server:
+```bash
+pnpm run build
+cd dist
+python3 -m http.server 8888
+```
+
+2. From any Expo project on your machine, or inside the root of the monorepo, point the CLI to the local server by setting the `NATIVEFORGE_REGISTRY_URL` environment variable:
+```bash
+NATIVEFORGE_REGISTRY_URL=http://localhost:8888 node /path/to/nativeforge/packages/cli/dist/index.js add
+```
+
+Alternatively, from the monorepo root, you can just use the helper script:
+```bash
+npm run nativeforge:local add
+```
 
 ## 🧬 Templates & Structure
 

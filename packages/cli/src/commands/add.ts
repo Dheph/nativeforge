@@ -3,8 +3,12 @@ import path from 'path';
 import { intro, outro, spinner, text, confirm } from '@clack/prompts';
 import { getRegistryComponent } from '../utils/registry.js';
 
-export async function addCommand(components: string[]) {
-  intro(`Installing components...`);
+export async function addCommand(components: string[], options?: { cwd?: string, skipPrompts?: boolean }) {
+  const targetCwd = options?.cwd || process.cwd();
+  
+  if (!options?.skipPrompts) {
+    intro(`Installing components...`);
+  }
 
   if (!components || components.length === 0) {
     const input = await text({
@@ -37,11 +41,11 @@ export async function addCommand(components: string[]) {
 
       // Escrever arquivos do componente
       for (const file of item.files) {
-        const targetPath = path.resolve(process.cwd(), 'src', file.path);
+        const targetPath = path.resolve(targetCwd, 'src', file.path);
         await fs.ensureDir(path.dirname(targetPath));
 
         let shouldWrite = true;
-        if (await fs.pathExists(targetPath)) {
+        if (await fs.pathExists(targetPath) && !options?.skipPrompts) {
           const overwrite = await confirm({
             message: `File ${file.path} already exists. Overwrite?`,
             initialValue: false,
@@ -84,5 +88,7 @@ export async function addCommand(components: string[]) {
     console.log(`   pnpm add ${Array.from(npmDependencies).join(' ')}\n`);
   }
 
-  outro(`Done!`);
+  if (!options?.skipPrompts) {
+    outro(`Done!`);
+  }
 }

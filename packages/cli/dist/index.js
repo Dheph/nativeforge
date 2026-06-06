@@ -2,7 +2,6 @@
 
 // src/index.ts
 import { Command } from "commander";
-import { intro as intro2, outro as outro2, select, text as text2 } from "@clack/prompts";
 
 // package.json
 var package_default = {
@@ -45,6 +44,11 @@ var package_default = {
   }
 };
 
+// src/commands/init.ts
+import { intro as intro2, outro as outro2, select, text as text2, spinner as spinner2 } from "@clack/prompts";
+import { execSync } from "child_process";
+import path2 from "path";
+
 // src/commands/add.ts
 import fs from "fs-extra";
 import path from "path";
@@ -53,7 +57,7 @@ import { intro, outro, spinner, text, confirm } from "@clack/prompts";
 // src/utils/registry.ts
 import { ofetch } from "ofetch";
 import { z } from "zod";
-var REGISTRY_URL = process.env.NATIVEFORGE_REGISTRY_URL || "https://raw.githubusercontent.com/dhephersonribeiro/nativeforge/main/packages/registry/dist";
+var REGISTRY_URL = process.env.NATIVEFORGE_REGISTRY_URL || "https://raw.githubusercontent.com/Dheph/nativeforge/main/packages/registry/dist";
 var registryItemFileSchema = z.object({
   path: z.string(),
   content: z.string()
@@ -83,8 +87,11 @@ async function getRegistryComponent(name) {
 }
 
 // src/commands/add.ts
-async function addCommand(components) {
-  intro(`Installing components...`);
+async function addCommand(components, options) {
+  const targetCwd = options?.cwd || process.cwd();
+  if (!options?.skipPrompts) {
+    intro(`Installing components...`);
+  }
   if (!components || components.length === 0) {
     const input = await text({
       message: "Which components would you like to add? (comma-separated)",
@@ -108,10 +115,10 @@ async function addCommand(components) {
       const item = await getRegistryComponent(component);
       s.stop(`Found ${component}!`);
       for (const file of item.files) {
-        const targetPath = path.resolve(process.cwd(), "src", file.path);
+        const targetPath = path.resolve(targetCwd, "src", file.path);
         await fs.ensureDir(path.dirname(targetPath));
         let shouldWrite = true;
-        if (await fs.pathExists(targetPath)) {
+        if (await fs.pathExists(targetPath) && !options?.skipPrompts) {
           const overwrite = await confirm({
             message: `File ${file.path} already exists. Overwrite?`,
             initialValue: false
@@ -147,26 +154,14 @@ async function addCommand(components) {
     console.log(`   pnpm add ${Array.from(npmDependencies).join(" ")}
 `);
   }
-  outro(`Done!`);
+  if (!options?.skipPrompts) {
+    outro(`Done!`);
+  }
 }
 
-// src/index.ts
-var { version } = package_default;
-var program = new Command();
-program.name("nativeforge").description("The ultimate CLI for scaffolding React Native and Expo architectures.").version(version);
-program.command("add [components...]").description("Add components to your project").action(addCommand);
-program.command("init").description("Initialize a new NativeForge project").action(async () => {
-  intro2(`Welcome to NativeForge v${version}`);
-  const projectType = await select({
-    message: "Which framework do you want to use?",
-    options: [
-      { value: "expo", label: "Expo (Recommended)" },
-      { value: "rn-cli", label: "React Native CLI" }
-    ]
-  });
-  if (typeof projectType === "symbol") {
-    process.exit(0);
-  }
+// src/commands/init.ts
+async function initCommand() {
+  intro2(`Initializing NativeForge Project...`);
   const projectName = await text2({
     message: "What is your project named?",
     placeholder: "my-app",
@@ -175,7 +170,41 @@ program.command("init").description("Initialize a new NativeForge project").acti
   if (typeof projectName === "symbol") {
     process.exit(0);
   }
-  outro2(`Successfully initialized ${String(projectName)} with ${String(projectType)}! (Dummy output)`);
-});
+  const templateOption = await select({
+    message: "Do you want to start with a base template?",
+    options: [
+      { value: "template-login", label: "Login Template (Firebase Auth + UI Base)" },
+      { value: "none", label: "Empty Project" }
+    ]
+  });
+  if (typeof templateOption === "symbol") {
+    process.exit(0);
+  }
+  const s = spinner2();
+  s.start(`Creating Expo project ${projectName}... (this may take a minute)`);
+  try {
+    execSync(`npx create-expo-app@latest ${projectName} --template blank-typescript -y`, {
+      stdio: "ignore"
+    });
+    s.stop(`Expo project ${projectName} created successfully!`);
+    const projectDir = path2.resolve(process.cwd(), projectName);
+    if (templateOption !== "none") {
+      console.log(`
+Adding ${templateOption} to your project...`);
+      await addCommand([templateOption], { cwd: projectDir, skipPrompts: true });
+    }
+    outro2(`Your project is ready! Run: cd ${projectName} && npx expo start`);
+  } catch (error) {
+    s.stop(`Failed to create project: ${error.message}`);
+    process.exit(1);
+  }
+}
+
+// src/index.ts
+var { version } = package_default;
+var program = new Command();
+program.name("nativeforge").description("The ultimate CLI for scaffolding React Native and Expo architectures.").version(version);
+program.command("add [components...]").description("Add components to your project").action(addCommand);
+program.command("init").description("Initialize a new NativeForge project").action(initCommand);
 program.parse();
 //# sourceMappingURL=index.js.map

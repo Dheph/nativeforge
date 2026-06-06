@@ -25,7 +25,6 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 
 // src/index.ts
 var import_commander = require("commander");
-var import_prompts2 = require("@clack/prompts");
 
 // package.json
 var package_default = {
@@ -68,6 +67,11 @@ var package_default = {
   }
 };
 
+// src/commands/init.ts
+var import_prompts2 = require("@clack/prompts");
+var import_child_process = require("child_process");
+var import_path2 = __toESM(require("path"), 1);
+
 // src/commands/add.ts
 var import_fs_extra = __toESM(require("fs-extra"), 1);
 var import_path = __toESM(require("path"), 1);
@@ -76,7 +80,7 @@ var import_prompts = require("@clack/prompts");
 // src/utils/registry.ts
 var import_ofetch = require("ofetch");
 var import_zod = require("zod");
-var REGISTRY_URL = process.env.NATIVEFORGE_REGISTRY_URL || "https://raw.githubusercontent.com/dhephersonribeiro/nativeforge/main/packages/registry/dist";
+var REGISTRY_URL = process.env.NATIVEFORGE_REGISTRY_URL || "https://raw.githubusercontent.com/Dheph/nativeforge/main/packages/registry/dist";
 var registryItemFileSchema = import_zod.z.object({
   path: import_zod.z.string(),
   content: import_zod.z.string()
@@ -106,8 +110,11 @@ async function getRegistryComponent(name) {
 }
 
 // src/commands/add.ts
-async function addCommand(components) {
-  (0, import_prompts.intro)(`Installing components...`);
+async function addCommand(components, options) {
+  const targetCwd = options?.cwd || process.cwd();
+  if (!options?.skipPrompts) {
+    (0, import_prompts.intro)(`Installing components...`);
+  }
   if (!components || components.length === 0) {
     const input = await (0, import_prompts.text)({
       message: "Which components would you like to add? (comma-separated)",
@@ -131,10 +138,10 @@ async function addCommand(components) {
       const item = await getRegistryComponent(component);
       s.stop(`Found ${component}!`);
       for (const file of item.files) {
-        const targetPath = import_path.default.resolve(process.cwd(), "src", file.path);
+        const targetPath = import_path.default.resolve(targetCwd, "src", file.path);
         await import_fs_extra.default.ensureDir(import_path.default.dirname(targetPath));
         let shouldWrite = true;
-        if (await import_fs_extra.default.pathExists(targetPath)) {
+        if (await import_fs_extra.default.pathExists(targetPath) && !options?.skipPrompts) {
           const overwrite = await (0, import_prompts.confirm)({
             message: `File ${file.path} already exists. Overwrite?`,
             initialValue: false
@@ -170,26 +177,14 @@ async function addCommand(components) {
     console.log(`   pnpm add ${Array.from(npmDependencies).join(" ")}
 `);
   }
-  (0, import_prompts.outro)(`Done!`);
+  if (!options?.skipPrompts) {
+    (0, import_prompts.outro)(`Done!`);
+  }
 }
 
-// src/index.ts
-var { version } = package_default;
-var program = new import_commander.Command();
-program.name("nativeforge").description("The ultimate CLI for scaffolding React Native and Expo architectures.").version(version);
-program.command("add [components...]").description("Add components to your project").action(addCommand);
-program.command("init").description("Initialize a new NativeForge project").action(async () => {
-  (0, import_prompts2.intro)(`Welcome to NativeForge v${version}`);
-  const projectType = await (0, import_prompts2.select)({
-    message: "Which framework do you want to use?",
-    options: [
-      { value: "expo", label: "Expo (Recommended)" },
-      { value: "rn-cli", label: "React Native CLI" }
-    ]
-  });
-  if (typeof projectType === "symbol") {
-    process.exit(0);
-  }
+// src/commands/init.ts
+async function initCommand() {
+  (0, import_prompts2.intro)(`Initializing NativeForge Project...`);
   const projectName = await (0, import_prompts2.text)({
     message: "What is your project named?",
     placeholder: "my-app",
@@ -198,7 +193,41 @@ program.command("init").description("Initialize a new NativeForge project").acti
   if (typeof projectName === "symbol") {
     process.exit(0);
   }
-  (0, import_prompts2.outro)(`Successfully initialized ${String(projectName)} with ${String(projectType)}! (Dummy output)`);
-});
+  const templateOption = await (0, import_prompts2.select)({
+    message: "Do you want to start with a base template?",
+    options: [
+      { value: "template-login", label: "Login Template (Firebase Auth + UI Base)" },
+      { value: "none", label: "Empty Project" }
+    ]
+  });
+  if (typeof templateOption === "symbol") {
+    process.exit(0);
+  }
+  const s = (0, import_prompts2.spinner)();
+  s.start(`Creating Expo project ${projectName}... (this may take a minute)`);
+  try {
+    (0, import_child_process.execSync)(`npx create-expo-app@latest ${projectName} --template blank-typescript -y`, {
+      stdio: "ignore"
+    });
+    s.stop(`Expo project ${projectName} created successfully!`);
+    const projectDir = import_path2.default.resolve(process.cwd(), projectName);
+    if (templateOption !== "none") {
+      console.log(`
+Adding ${templateOption} to your project...`);
+      await addCommand([templateOption], { cwd: projectDir, skipPrompts: true });
+    }
+    (0, import_prompts2.outro)(`Your project is ready! Run: cd ${projectName} && npx expo start`);
+  } catch (error) {
+    s.stop(`Failed to create project: ${error.message}`);
+    process.exit(1);
+  }
+}
+
+// src/index.ts
+var { version } = package_default;
+var program = new import_commander.Command();
+program.name("nativeforge").description("The ultimate CLI for scaffolding React Native and Expo architectures.").version(version);
+program.command("add [components...]").description("Add components to your project").action(addCommand);
+program.command("init").description("Initialize a new NativeForge project").action(initCommand);
 program.parse();
 //# sourceMappingURL=index.cjs.map

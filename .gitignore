@@ -5,6 +5,9 @@ dist
 build
 .turbo
 .DS_Store
+apps/sandbox/test*
+src/components/
+src/services/
 .env
 .env.local
 .env.development.local

@@ -14,3 +14,6 @@ src/services/
 .env.test.local
 .env.production.local
 apps/sandbox/test
+e2e-test/
+test/
+

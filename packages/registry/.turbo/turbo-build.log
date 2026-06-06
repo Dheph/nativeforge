@@ -1,0 +1,6 @@
+
+> @nativeforge/registry@0.1.0 build /Users/dhephersonribeiro/Documents/study/pasta/nativeforge/packages/registry
+> tsx src/build-registry.ts
+
+Building NativeForge Registry...
+Registry built successfully!

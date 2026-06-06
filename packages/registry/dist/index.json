@@ -1,8 +1,36 @@
 [
   {
+    "name": "ui-button",
+    "type": "component",
+    "dependencies": [],
+    "registryDependencies": []
+  },
+  {
+    "name": "ui-input",
+    "type": "component",
+    "dependencies": [
+      "lucide-react-native"
+    ],
+    "registryDependencies": []
+  },
+  {
+    "name": "service-firebase-auth",
+    "type": "service",
+    "dependencies": [
+      "firebase",
+      "zustand",
+      "@react-native-async-storage/async-storage"
+    ],
+    "registryDependencies": []
+  },
+  {
     "name": "template-login",
     "type": "template",
     "dependencies": [],
-    "registryDependencies": []
+    "registryDependencies": [
+      "ui-button",
+      "ui-input",
+      "service-firebase-auth"
+    ]
   }
 ]

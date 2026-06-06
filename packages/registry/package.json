@@ -5,8 +5,9 @@
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch"
+    "build": "tsx src/build-registry.ts",
+    "dev": "tsx watch src/build-registry.ts",
+    "clean": "rm -rf dist"
   },
   "author": "",
   "license": "MIT",

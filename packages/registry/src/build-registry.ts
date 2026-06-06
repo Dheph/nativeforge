@@ -12,10 +12,46 @@ const DIST_COMPONENTS_DIR = path.join(DIST_DIR, 'components');
 
 const componentsToBuild = [
   {
+    name: 'ui-button',
+    type: 'component',
+    dependencies: [],
+    registryDependencies: [],
+    files: [
+      {
+        path: 'components/ui-button/index.tsx',
+        target: 'components/ui-button/index.tsx'
+      }
+    ]
+  },
+  {
+    name: 'ui-input',
+    type: 'component',
+    dependencies: ['lucide-react-native'],
+    registryDependencies: [],
+    files: [
+      {
+        path: 'components/ui-input/index.tsx',
+        target: 'components/ui-input/index.tsx'
+      }
+    ]
+  },
+  {
+    name: 'service-firebase-auth',
+    type: 'service',
+    dependencies: ['firebase', 'zustand', '@react-native-async-storage/async-storage'],
+    registryDependencies: [],
+    files: [
+      {
+        path: 'services/firebase-auth/index.tsx',
+        target: 'services/firebase-auth/index.tsx'
+      }
+    ]
+  },
+  {
     name: 'template-login',
     type: 'template',
     dependencies: [],
-    registryDependencies: [],
+    registryDependencies: ['ui-button', 'ui-input', 'service-firebase-auth'],
     files: [
       {
         path: 'templates/login/index.tsx',

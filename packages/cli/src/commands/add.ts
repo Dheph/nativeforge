@@ -19,7 +19,15 @@ export async function addCommand(components: string[]) {
     components = input.split(',').map((c) => c.trim());
   }
 
-  for (const component of components) {
+  const queue = [...components];
+  const processed = new Set<string>();
+  const npmDependencies = new Set<string>();
+
+  while (queue.length > 0) {
+    const component = queue.shift()!;
+    if (processed.has(component)) continue;
+    processed.add(component);
+
     const s = spinner();
     s.start(`Fetching ${component} from registry...`);
 
@@ -27,11 +35,9 @@ export async function addCommand(components: string[]) {
       const item = await getRegistryComponent(component);
       s.stop(`Found ${component}!`);
 
+      // Escrever arquivos do componente
       for (const file of item.files) {
-        // Here we can use a target path resolution, for now let's write to current dir
-        // e.g. ./src/components/...
         const targetPath = path.resolve(process.cwd(), 'src', file.path);
-        
         await fs.ensureDir(path.dirname(targetPath));
 
         let shouldWrite = true;
@@ -54,14 +60,28 @@ export async function addCommand(components: string[]) {
         }
       }
 
+      // Adicionar registryDependencies à fila
+      if (item.registryDependencies && item.registryDependencies.length > 0) {
+        for (const dep of item.registryDependencies) {
+          if (!processed.has(dep) && !queue.includes(dep)) {
+            queue.push(dep);
+          }
+        }
+      }
+
+      // Adicionar dependências NPM
       if (item.dependencies && item.dependencies.length > 0) {
-        console.log(`\n📦 Don't forget to install dependencies:`);
-        console.log(`   pnpm add ${item.dependencies.join(' ')}\n`);
+        item.dependencies.forEach(d => npmDependencies.add(d));
       }
 
     } catch (error: any) {
       s.stop(`Failed to install ${component}: ${error.message}`);
     }
+  }
+
+  if (npmDependencies.size > 0) {
+    console.log(`\n📦 Don't forget to install these dependencies:`);
+    console.log(`   pnpm add ${Array.from(npmDependencies).join(' ')}\n`);
   }
 
   outro(`Done!`);

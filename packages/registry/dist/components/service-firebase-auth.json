@@ -1,0 +1,16 @@
+{
+  "name": "service-firebase-auth",
+  "type": "service",
+  "dependencies": [
+    "firebase",
+    "zustand",
+    "@react-native-async-storage/async-storage"
+  ],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "services/firebase-auth/index.tsx",
+      "content": "import { create } from 'zustand';\nimport { initializeApp, getApp, getApps } from 'firebase/app';\nimport { \n  initializeAuth, \n  // @ts-ignore\n  getReactNativePersistence,\n  User,\n  signInWithEmailAndPassword,\n  createUserWithEmailAndPassword,\n  signOut as fbSignOut\n} from 'firebase/auth';\nimport AsyncStorage from '@react-native-async-storage/async-storage';\n\n// 1. Configure as variáveis de ambiente no seu .env ou app.json do Expo\n// 2. Se as credenciais forem dummy, a aplicação iniciará, mas as chamadas falharão.\nconst firebaseConfig = {\n  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY || \"dummy_api_key\",\n  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN || \"dummy_domain\",\n  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID || \"dummy_id\",\n  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET || \"dummy_bucket\",\n  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || \"dummy_sender\",\n  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID || \"dummy_app_id\"\n};\n\nconst app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();\n\nconst auth = initializeAuth(app, {\n  persistence: getReactNativePersistence(AsyncStorage)\n});\n\ninterface AuthState {\n  user: User | null;\n  isLoading: boolean;\n  error: string | null;\n  signIn: (email: string, pass: string) => Promise<void>;\n  signUp: (email: string, pass: string) => Promise<void>;\n  signOut: () => Promise<void>;\n  clearError: () => void;\n}\n\nexport const useAuthStore = create<AuthState>((set) => ({\n  user: null,\n  isLoading: false,\n  error: null,\n  \n  signIn: async (email, pass) => {\n    set({ isLoading: true, error: null });\n    try {\n      const cred = await signInWithEmailAndPassword(auth, email, pass);\n      set({ user: cred.user, isLoading: false });\n    } catch (e: any) {\n      set({ error: e.message, isLoading: false });\n    }\n  },\n\n  signUp: async (email, pass) => {\n    set({ isLoading: true, error: null });\n    try {\n      const cred = await createUserWithEmailAndPassword(auth, email, pass);\n      set({ user: cred.user, isLoading: false });\n    } catch (e: any) {\n      set({ error: e.message, isLoading: false });\n    }\n  },\n\n  signOut: async () => {\n    set({ isLoading: true, error: null });\n    try {\n      await fbSignOut(auth);\n      set({ user: null, isLoading: false });\n    } catch (e: any) {\n      set({ error: e.message, isLoading: false });\n    }\n  },\n\n  clearError: () => set({ error: null })\n}));\n\n// Setup auth state listener on module load\nauth.onAuthStateChanged((user) => {\n  useAuthStore.setState({ user });\n});\n\nexport { auth, app };\n"
+    }
+  ]
+}

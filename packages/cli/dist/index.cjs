@@ -228,15 +228,10 @@ Adding ${templateOption} to your project...`);
       if (templateOption === "template-login") {
         const appTsxPath = import_path2.default.join(projectDir, "App.tsx");
         if (await import_fs_extra2.default.pathExists(appTsxPath)) {
-          const appContent = `import { SafeAreaView } from 'react-native';
-import LoginTemplate from './src/components/templates/login';
+          const appContent = `import LoginTemplate from './src/components/templates/login';
 
 export default function App() {
-  return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-      <LoginTemplate />
-    </SafeAreaView>
-  );
+  return <LoginTemplate />;
 }
 `;
           await import_fs_extra2.default.writeFile(appTsxPath, appContent, "utf-8");

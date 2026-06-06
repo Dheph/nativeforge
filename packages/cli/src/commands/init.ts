@@ -50,15 +50,10 @@ export async function initCommand(options: { name?: string, template?: string })
       if (templateOption === 'template-login') {
         const appTsxPath = path.join(projectDir, 'App.tsx');
         if (await fs.pathExists(appTsxPath)) {
-          const appContent = `import { SafeAreaView } from 'react-native';
-import LoginTemplate from './src/components/templates/login';
+          const appContent = `import LoginTemplate from './src/components/templates/login';
 
 export default function App() {
-  return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-      <LoginTemplate />
-    </SafeAreaView>
-  );
+  return <LoginTemplate />;
 }
 `;
           await fs.writeFile(appTsxPath, appContent, 'utf-8');

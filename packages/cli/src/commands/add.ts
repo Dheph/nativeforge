@@ -41,7 +41,12 @@ export async function addCommand(components: string[], options?: { cwd?: string,
 
       // Escrever arquivos do componente
       for (const file of item.files) {
-        const targetPath = path.resolve(targetCwd, 'src', file.path);
+        let targetPath = path.resolve(targetCwd, 'src', file.path);
+        
+        // NativeForge Router Injection Support
+        if (file.path.startsWith('app/')) {
+          targetPath = path.resolve(targetCwd, file.path);
+        }
         await fs.ensureDir(path.dirname(targetPath));
 
         let shouldWrite = true;

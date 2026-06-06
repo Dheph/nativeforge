@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Input } from '../../ui-input';
 import { Button } from '../../ui-button';
 import { useAuthStore } from '../../../services/firebase-auth';
@@ -7,6 +8,7 @@ import { useAuthStore } from '../../../services/firebase-auth';
 export default function LoginTemplate() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const router = useRouter();
   
   // Pegando estados e funções globais da nossa store Zustand do Firebase
   const { signIn, isLoading, error } = useAuthStore();
@@ -44,6 +46,16 @@ export default function LoginTemplate() {
           onPress={handleLogin} 
           isLoading={isLoading} 
         />
+        
+        <View style={styles.linksContainer}>
+          <Button variant="ghost" onPress={() => router.push('/forgot-password')}>
+            Forgot Password?
+          </Button>
+          
+          <Button variant="ghost" onPress={() => router.push('/register')}>
+            Create an Account
+          </Button>
+        </View>
       </View>
     </View>
   );
@@ -73,5 +85,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#fef2f2',
     padding: 12,
     borderRadius: 8,
+  },
+  linksContainer: {
+    marginTop: 8,
+    gap: 8,
+    alignItems: 'center',
   }
 });

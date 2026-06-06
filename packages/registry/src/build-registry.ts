@@ -48,15 +48,21 @@ const componentsToBuild = [
     ]
   },
   {
-    name: 'template-login',
+    name: 'template-auth',
     type: 'template',
-    dependencies: [],
+    dependencies: ['expo-router', 'react-native-safe-area-context', 'react-native-screens'],
     registryDependencies: ['ui-button', 'ui-input', 'service-firebase-auth'],
     files: [
-      {
-        path: 'templates/login/index.tsx',
-        target: 'components/templates/login/index.tsx'
-      }
+      { path: 'templates/login/components/templates/login/index.tsx', target: 'components/templates/login/index.tsx' },
+      { path: 'templates/login/components/templates/register/index.tsx', target: 'components/templates/register/index.tsx' },
+      { path: 'templates/login/components/templates/forgot-password/index.tsx', target: 'components/templates/forgot-password/index.tsx' },
+      { path: 'templates/login/app/_layout.tsx', target: 'app/_layout.tsx' },
+      { path: 'templates/login/app/(auth)/_layout.tsx', target: 'app/(auth)/_layout.tsx' },
+      { path: 'templates/login/app/(auth)/login.tsx', target: 'app/(auth)/login.tsx' },
+      { path: 'templates/login/app/(auth)/register.tsx', target: 'app/(auth)/register.tsx' },
+      { path: 'templates/login/app/(auth)/forgot-password.tsx', target: 'app/(auth)/forgot-password.tsx' },
+      { path: 'templates/login/app/(app)/_layout.tsx', target: 'app/(app)/_layout.tsx' },
+      { path: 'templates/login/app/(app)/index.tsx', target: 'app/(app)/index.tsx' }
     ]
   }
 ];

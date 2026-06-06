@@ -24,9 +24,13 @@
     "registryDependencies": []
   },
   {
-    "name": "template-login",
+    "name": "template-auth",
     "type": "template",
-    "dependencies": [],
+    "dependencies": [
+      "expo-router",
+      "react-native-safe-area-context",
+      "react-native-screens"
+    ],
     "registryDependencies": [
       "ui-button",
       "ui-input",

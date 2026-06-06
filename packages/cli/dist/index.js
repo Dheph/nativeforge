@@ -48,7 +48,6 @@ var package_default = {
 import { intro as intro2, outro as outro2, select, text as text2, spinner as spinner2 } from "@clack/prompts";
 import { execSync } from "child_process";
 import path2 from "path";
-import fs2 from "fs-extra";
 
 // src/commands/add.ts
 import fs from "fs-extra";
@@ -121,7 +120,10 @@ async function addCommand(components, options) {
       const item = await getRegistryComponent(component);
       s.stop(`Found ${component}!`);
       for (const file of item.files) {
-        const targetPath = path.resolve(targetCwd, "src", file.path);
+        let targetPath = path.resolve(targetCwd, "src", file.path);
+        if (file.path.startsWith("app/")) {
+          targetPath = path.resolve(targetCwd, file.path);
+        }
         await fs.ensureDir(path.dirname(targetPath));
         let shouldWrite = true;
         if (await fs.pathExists(targetPath) && !options?.skipPrompts) {
@@ -183,8 +185,8 @@ async function initCommand(options) {
     const input = await select({
       message: "Do you want to start with a base template?",
       options: [
-        { value: "template-login", label: "Login Template (Firebase Auth + UI Base)" },
-        { value: "none", label: "Empty Project" }
+        { value: "template-auth", label: "Auth Flow (Router, Login, Register + Firebase)" },
+        { value: "none", label: "Empty Project (Expo Router)" }
       ]
     });
     if (typeof input === "symbol") process.exit(0);
@@ -193,25 +195,18 @@ async function initCommand(options) {
   const s = spinner2();
   s.start(`Creating Expo project ${projectName}... (this may take a minute)`);
   try {
-    execSync(`npx create-expo-app@latest ${projectName} --template blank-typescript -y`, {
-      stdio: "ignore"
-    });
+    execSync(`CI=1 npx create-expo-app@latest ${projectName} -y`, { stdio: "ignore" });
     s.stop(`Expo project ${projectName} created successfully!`);
     const projectDir = path2.resolve(process.cwd(), projectName);
     if (templateOption !== "none") {
       console.log(`
 Adding ${templateOption} to your project...`);
       await addCommand([templateOption], { cwd: projectDir, skipPrompts: true });
-      if (templateOption === "template-login") {
-        const appTsxPath = path2.join(projectDir, "App.tsx");
-        if (await fs2.pathExists(appTsxPath)) {
-          const appContent = `import LoginTemplate from './src/components/templates/login';
-
-export default function App() {
-  return <LoginTemplate />;
-}
-`;
-          await fs2.writeFile(appTsxPath, appContent, "utf-8");
+      if (templateOption === "template-auth") {
+        const fs2 = await import("fs-extra");
+        const defaultAppDir = path2.join(projectDir, "app");
+        if (await fs2.pathExists(defaultAppDir)) {
+          await fs2.emptyDir(defaultAppDir);
         }
       }
     }

@@ -1,0 +1,56 @@
+{
+  "name": "template-auth",
+  "type": "template",
+  "dependencies": [
+    "expo-router",
+    "react-native-safe-area-context",
+    "react-native-screens"
+  ],
+  "registryDependencies": [
+    "ui-button",
+    "ui-input",
+    "service-firebase-auth"
+  ],
+  "files": [
+    {
+      "path": "components/templates/login/index.tsx",
+      "content": "import React, { useState } from 'react';\nimport { View, Text, StyleSheet } from 'react-native';\nimport { useRouter } from 'expo-router';\nimport { Input } from '../../ui-input';\nimport { Button } from '../../ui-button';\nimport { useAuthStore } from '../../../services/firebase-auth';\n\nexport default function LoginTemplate() {\n  const [email, setEmail] = useState('');\n  const [password, setPassword] = useState('');\n  const router = useRouter();\n  \n  // Pegando estados e funções globais da nossa store Zustand do Firebase\n  const { signIn, isLoading, error } = useAuthStore();\n\n  const handleLogin = () => {\n    signIn(email, password);\n  };\n\n  return (\n    <View style={styles.container}>\n      <Text style={styles.title}>Welcome Back</Text>\n      \n      {error && <Text style={styles.globalError}>{error}</Text>}\n\n      <View style={styles.form}>\n        <Input\n          label=\"Email\"\n          placeholder=\"your@email.com\"\n          value={email}\n          onChangeText={setEmail}\n          keyboardType=\"email-address\"\n          autoCapitalize=\"none\"\n        />\n        \n        <Input\n          label=\"Password\"\n          placeholder=\"Enter your password\"\n          value={password}\n          onChangeText={setPassword}\n          secureTextEntry\n        />\n        \n        <Button \n          label=\"Log In\" \n          onPress={handleLogin} \n          isLoading={isLoading} \n        />\n        \n        <View style={styles.linksContainer}>\n          <Button variant=\"ghost\" onPress={() => router.push('/forgot-password')}>\n            Forgot Password?\n          </Button>\n          \n          <Button variant=\"ghost\" onPress={() => router.push('/register')}>\n            Create an Account\n          </Button>\n        </View>\n      </View>\n    </View>\n  );\n}\n\nconst styles = StyleSheet.create({\n  container: {\n    flex: 1,\n    padding: 24,\n    justifyContent: 'center',\n    backgroundColor: '#fff',\n  },\n  title: {\n    fontSize: 28,\n    fontWeight: 'bold',\n    marginBottom: 32,\n    textAlign: 'center',\n    color: '#0f172a',\n  },\n  form: {\n    gap: 16,\n  },\n  globalError: {\n    color: '#ef4444',\n    marginBottom: 16,\n    textAlign: 'center',\n    backgroundColor: '#fef2f2',\n    padding: 12,\n    borderRadius: 8,\n  },\n  linksContainer: {\n    marginTop: 8,\n    gap: 8,\n    alignItems: 'center',\n  }\n});\n"
+    },
+    {
+      "path": "components/templates/register/index.tsx",
+      "content": "import React from 'react';\nimport { View, Text } from 'react-native';\nimport { useRouter } from 'expo-router';\nimport { Button } from '../../ui-button';\nimport { Input } from '../../ui-input';\n\nexport default function RegisterTemplate() {\n  const router = useRouter();\n\n  return (\n    <View style={{ flex: 1, padding: 24, justifyContent: 'center', backgroundColor: '#fff' }}>\n      <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 24, textAlign: 'center' }}>\n        Create an Account\n      </Text>\n      \n      <Input placeholder=\"Email\" keyboardType=\"email-address\" autoCapitalize=\"none\" />\n      <View style={{ height: 16 }} />\n      <Input placeholder=\"Password\" secureTextEntry />\n      <View style={{ height: 16 }} />\n      <Input placeholder=\"Confirm Password\" secureTextEntry />\n      <View style={{ height: 24 }} />\n      \n      <Button onPress={() => {}}>Sign Up</Button>\n      \n      <Button variant=\"ghost\" onPress={() => router.back()} style={{ marginTop: 16 }}>\n        Already have an account? Log in\n      </Button>\n    </View>\n  );\n}\n"
+    },
+    {
+      "path": "components/templates/forgot-password/index.tsx",
+      "content": "import React from 'react';\nimport { View, Text } from 'react-native';\nimport { useRouter } from 'expo-router';\nimport { Button } from '../../ui-button';\nimport { Input } from '../../ui-input';\n\nexport default function ForgotPasswordTemplate() {\n  const router = useRouter();\n\n  return (\n    <View style={{ flex: 1, padding: 24, justifyContent: 'center', backgroundColor: '#fff' }}>\n      <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 16, textAlign: 'center' }}>\n        Reset Password\n      </Text>\n      <Text style={{ fontSize: 14, color: '#666', marginBottom: 24, textAlign: 'center' }}>\n        Enter your email address and we'll send you a link to reset your password.\n      </Text>\n      \n      <Input placeholder=\"Email address\" keyboardType=\"email-address\" autoCapitalize=\"none\" />\n      <View style={{ height: 24 }} />\n      \n      <Button onPress={() => {}}>Send Reset Link</Button>\n      \n      <Button variant=\"ghost\" onPress={() => router.back()} style={{ marginTop: 16 }}>\n        Back to Login\n      </Button>\n    </View>\n  );\n}\n"
+    },
+    {
+      "path": "app/_layout.tsx",
+      "content": "import { useEffect } from 'react';\nimport { Slot, useRouter, useSegments } from 'expo-router';\nimport { useAuthStore } from '../src/services/firebase-auth';\n\nexport default function RootLayout() {\n  const { user, initialized } = useAuthStore();\n  const segments = useSegments();\n  const router = useRouter();\n\n  useEffect(() => {\n    if (!initialized) return;\n\n    const inAuthGroup = segments[0] === '(auth)';\n\n    if (!user && !inAuthGroup) {\n      // User is not signed in and trying to access an authenticated screen\n      router.replace('/login');\n    } else if (user && inAuthGroup) {\n      // User is signed in and trying to access auth screens (e.g. login)\n      router.replace('/');\n    }\n  }, [user, initialized, segments]);\n\n  return <Slot />;\n}\n"
+    },
+    {
+      "path": "app/(auth)/_layout.tsx",
+      "content": "import { Stack } from 'expo-router';\n\nexport default function AuthLayout() {\n  return (\n    <Stack screenOptions={{ headerShown: false }}>\n      <Stack.Screen name=\"login\" />\n      <Stack.Screen name=\"register\" />\n      <Stack.Screen name=\"forgot-password\" />\n    </Stack>\n  );\n}\n"
+    },
+    {
+      "path": "app/(auth)/login.tsx",
+      "content": "import LoginTemplate from '../../src/components/templates/login';\n\nexport default function LoginScreen() {\n  return <LoginTemplate />;\n}\n"
+    },
+    {
+      "path": "app/(auth)/register.tsx",
+      "content": "import RegisterTemplate from '../../src/components/templates/register';\n\nexport default function RegisterScreen() {\n  return <RegisterTemplate />;\n}\n"
+    },
+    {
+      "path": "app/(auth)/forgot-password.tsx",
+      "content": "import ForgotPasswordTemplate from '../../src/components/templates/forgot-password';\n\nexport default function ForgotPasswordScreen() {\n  return <ForgotPasswordTemplate />;\n}\n"
+    },
+    {
+      "path": "app/(app)/_layout.tsx",
+      "content": "import { Tabs } from 'expo-router';\nimport { Button } from '../../src/components/ui-button';\nimport { useAuthStore } from '../../src/services/firebase-auth';\n\nexport default function AppLayout() {\n  const { signOut } = useAuthStore();\n\n  return (\n    <Tabs>\n      <Tabs.Screen \n        name=\"index\" \n        options={{ \n          title: 'Home',\n          headerRight: () => (\n            <Button variant=\"ghost\" onPress={signOut} style={{ paddingHorizontal: 16 }}>\n              Logout\n            </Button>\n          )\n        }} \n      />\n    </Tabs>\n  );\n}\n"
+    },
+    {
+      "path": "app/(app)/index.tsx",
+      "content": "import { View, Text } from 'react-native';\n\nexport default function HomeScreen() {\n  return (\n    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>\n      <Text style={{ fontSize: 20, fontWeight: 'bold' }}>Welcome to NativeForge!</Text>\n      <Text style={{ color: '#666', marginTop: 8 }}>You are successfully authenticated.</Text>\n    </View>\n  );\n}\n"
+    }
+  ]
+}

@@ -71,7 +71,6 @@ var package_default = {
 var import_prompts2 = require("@clack/prompts");
 var import_child_process = require("child_process");
 var import_path2 = __toESM(require("path"), 1);
-var import_fs_extra2 = __toESM(require("fs-extra"), 1);
 
 // src/commands/add.ts
 var import_fs_extra = __toESM(require("fs-extra"), 1);
@@ -144,7 +143,10 @@ async function addCommand(components, options) {
       const item = await getRegistryComponent(component);
       s.stop(`Found ${component}!`);
       for (const file of item.files) {
-        const targetPath = import_path.default.resolve(targetCwd, "src", file.path);
+        let targetPath = import_path.default.resolve(targetCwd, "src", file.path);
+        if (file.path.startsWith("app/")) {
+          targetPath = import_path.default.resolve(targetCwd, file.path);
+        }
         await import_fs_extra.default.ensureDir(import_path.default.dirname(targetPath));
         let shouldWrite = true;
         if (await import_fs_extra.default.pathExists(targetPath) && !options?.skipPrompts) {
@@ -206,8 +208,8 @@ async function initCommand(options) {
     const input = await (0, import_prompts2.select)({
       message: "Do you want to start with a base template?",
       options: [
-        { value: "template-login", label: "Login Template (Firebase Auth + UI Base)" },
-        { value: "none", label: "Empty Project" }
+        { value: "template-auth", label: "Auth Flow (Router, Login, Register + Firebase)" },
+        { value: "none", label: "Empty Project (Expo Router)" }
       ]
     });
     if (typeof input === "symbol") process.exit(0);
@@ -216,25 +218,18 @@ async function initCommand(options) {
   const s = (0, import_prompts2.spinner)();
   s.start(`Creating Expo project ${projectName}... (this may take a minute)`);
   try {
-    (0, import_child_process.execSync)(`npx create-expo-app@latest ${projectName} --template blank-typescript -y`, {
-      stdio: "ignore"
-    });
+    (0, import_child_process.execSync)(`CI=1 npx create-expo-app@latest ${projectName} -y`, { stdio: "ignore" });
     s.stop(`Expo project ${projectName} created successfully!`);
     const projectDir = import_path2.default.resolve(process.cwd(), projectName);
     if (templateOption !== "none") {
       console.log(`
 Adding ${templateOption} to your project...`);
       await addCommand([templateOption], { cwd: projectDir, skipPrompts: true });
-      if (templateOption === "template-login") {
-        const appTsxPath = import_path2.default.join(projectDir, "App.tsx");
-        if (await import_fs_extra2.default.pathExists(appTsxPath)) {
-          const appContent = `import LoginTemplate from './src/components/templates/login';
-
-export default function App() {
-  return <LoginTemplate />;
-}
-`;
-          await import_fs_extra2.default.writeFile(appTsxPath, appContent, "utf-8");
+      if (templateOption === "template-auth") {
+        const fs2 = await import("fs-extra");
+        const defaultAppDir = import_path2.default.join(projectDir, "app");
+        if (await fs2.pathExists(defaultAppDir)) {
+          await fs2.emptyDir(defaultAppDir);
         }
       }
     }

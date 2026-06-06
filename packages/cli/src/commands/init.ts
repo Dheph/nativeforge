@@ -23,8 +23,8 @@ export async function initCommand(options: { name?: string, template?: string })
     const input = await select({
       message: 'Do you want to start with a base template?',
       options: [
-        { value: 'template-login', label: 'Login Template (Firebase Auth + UI Base)' },
-        { value: 'none', label: 'Empty Project' },
+        { value: 'template-auth', label: 'Auth Flow (Router, Login, Register + Firebase)' },
+        { value: 'none', label: 'Empty Project (Expo Router)' },
       ],
     });
     if (typeof input === 'symbol') process.exit(0);
@@ -35,10 +35,9 @@ export async function initCommand(options: { name?: string, template?: string })
   s.start(`Creating Expo project ${projectName}... (this may take a minute)`);
 
   try {
-    // Scaffold Expo app silently
-    execSync(`npx create-expo-app@latest ${projectName} --template blank-typescript -y`, { 
-      stdio: 'ignore' 
-    });
+    // Usa o template default do Expo que já vem com Expo Router (app/ diretório)
+    // O prefixo CI=1 evita que o create-expo-app pergunte sobre repositório git (o que pode travar o processo)
+    execSync(`CI=1 npx create-expo-app@latest ${projectName} -y`, { stdio: 'ignore' });
     s.stop(`Expo project ${projectName} created successfully!`);
 
     const projectDir = path.resolve(process.cwd(), projectName);
@@ -47,16 +46,12 @@ export async function initCommand(options: { name?: string, template?: string })
       console.log(`\nAdding ${templateOption} to your project...`);
       await addCommand([templateOption as string], { cwd: projectDir, skipPrompts: true });
 
-      if (templateOption === 'template-login') {
-        const appTsxPath = path.join(projectDir, 'App.tsx');
-        if (await fs.pathExists(appTsxPath)) {
-          const appContent = `import LoginTemplate from './src/components/templates/login';
-
-export default function App() {
-  return <LoginTemplate />;
-}
-`;
-          await fs.writeFile(appTsxPath, appContent, 'utf-8');
+      if (templateOption === 'template-auth') {
+        // Limpar o boilerplate padrão do Expo Router para injetar o nosso
+        const fs = await import('fs-extra');
+        const defaultAppDir = path.join(projectDir, 'app');
+        if (await fs.pathExists(defaultAppDir)) {
+          await fs.emptyDir(defaultAppDir);
         }
       }
     }

@@ -121,6 +121,8 @@ async function getRegistryComponent(name) {
 // src/commands/add.ts
 async function addCommand(components, options) {
   const targetCwd = options?.cwd || process.cwd();
+  const hasSrcDir = await import_fs_extra.default.pathExists(import_path.default.resolve(targetCwd, "src"));
+  const baseDir = hasSrcDir ? "src" : "";
   if (!options?.skipPrompts) {
     (0, import_prompts.intro)(`Installing components...`);
   }
@@ -195,7 +197,7 @@ async function addCommand(components, options) {
       const item = await getRegistryComponent(component);
       s.stop(`Found ${component}!`);
       for (const file of item.files) {
-        const targetPath = import_path.default.resolve(targetCwd, "src", file.path);
+        const targetPath = import_path.default.resolve(targetCwd, baseDir, file.path);
         await import_fs_extra.default.ensureDir(import_path.default.dirname(targetPath));
         let shouldWrite = true;
         if (await import_fs_extra.default.pathExists(targetPath) && !options?.skipPrompts) {
@@ -338,9 +340,13 @@ async function initCommand(options) {
     if (templateOption !== "none") {
       if (templateOption === "template-auth") {
         const fs2 = await import("fs-extra");
-        const defaultAppDir = import_path2.default.join(projectDir, "src", "app");
-        if (await fs2.pathExists(defaultAppDir)) {
-          await fs2.emptyDir(defaultAppDir);
+        const defaultAppDirRoot = import_path2.default.join(projectDir, "app");
+        const defaultAppDirSrc = import_path2.default.join(projectDir, "src", "app");
+        if (await fs2.pathExists(defaultAppDirRoot)) {
+          await fs2.emptyDir(defaultAppDirRoot);
+        }
+        if (await fs2.pathExists(defaultAppDirSrc)) {
+          await fs2.emptyDir(defaultAppDirSrc);
         }
       }
       console.log(`

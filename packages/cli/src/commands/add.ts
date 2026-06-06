@@ -6,6 +6,10 @@ import { getRegistryComponent, getRegistryIndex } from '../utils/registry.js';
 export async function addCommand(components: string[], options?: { cwd?: string; skipPrompts?: boolean; socialProviders?: string[]; authProvider?: string }) {
   const targetCwd = options?.cwd || process.cwd();
   
+  // Detect if project uses a src/ directory
+  const hasSrcDir = await fs.pathExists(path.resolve(targetCwd, 'src'));
+  const baseDir = hasSrcDir ? 'src' : '';
+  
   if (!options?.skipPrompts) {
     intro(`Installing components...`);
   }
@@ -94,7 +98,7 @@ export async function addCommand(components: string[], options?: { cwd?: string;
 
       // Escrever arquivos do componente
       for (const file of item.files) {
-        const targetPath = path.resolve(targetCwd, 'src', file.path);
+        const targetPath = path.resolve(targetCwd, baseDir, file.path);
         
         await fs.ensureDir(path.dirname(targetPath));
 

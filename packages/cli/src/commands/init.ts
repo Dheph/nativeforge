@@ -81,9 +81,13 @@ export async function initCommand(options: { name?: string, template?: string })
       if (templateOption === 'template-auth') {
         // Limpar o boilerplate padrão do Expo Router para injetar o nosso
         const fs = await import('fs-extra');
-        const defaultAppDir = path.join(projectDir, 'src', 'app');
-        if (await fs.pathExists(defaultAppDir)) {
-          await fs.emptyDir(defaultAppDir);
+        const defaultAppDirRoot = path.join(projectDir, 'app');
+        const defaultAppDirSrc = path.join(projectDir, 'src', 'app');
+        if (await fs.pathExists(defaultAppDirRoot)) {
+          await fs.emptyDir(defaultAppDirRoot);
+        }
+        if (await fs.pathExists(defaultAppDirSrc)) {
+          await fs.emptyDir(defaultAppDirSrc);
         }
       }
 

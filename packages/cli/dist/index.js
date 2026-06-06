@@ -98,6 +98,8 @@ async function getRegistryComponent(name) {
 // src/commands/add.ts
 async function addCommand(components, options) {
   const targetCwd = options?.cwd || process.cwd();
+  const hasSrcDir = await fs.pathExists(path.resolve(targetCwd, "src"));
+  const baseDir = hasSrcDir ? "src" : "";
   if (!options?.skipPrompts) {
     intro(`Installing components...`);
   }
@@ -172,7 +174,7 @@ async function addCommand(components, options) {
       const item = await getRegistryComponent(component);
       s.stop(`Found ${component}!`);
       for (const file of item.files) {
-        const targetPath = path.resolve(targetCwd, "src", file.path);
+        const targetPath = path.resolve(targetCwd, baseDir, file.path);
         await fs.ensureDir(path.dirname(targetPath));
         let shouldWrite = true;
         if (await fs.pathExists(targetPath) && !options?.skipPrompts) {
@@ -315,9 +317,13 @@ async function initCommand(options) {
     if (templateOption !== "none") {
       if (templateOption === "template-auth") {
         const fs2 = await import("fs-extra");
-        const defaultAppDir = path2.join(projectDir, "src", "app");
-        if (await fs2.pathExists(defaultAppDir)) {
-          await fs2.emptyDir(defaultAppDir);
+        const defaultAppDirRoot = path2.join(projectDir, "app");
+        const defaultAppDirSrc = path2.join(projectDir, "src", "app");
+        if (await fs2.pathExists(defaultAppDirRoot)) {
+          await fs2.emptyDir(defaultAppDirRoot);
+        }
+        if (await fs2.pathExists(defaultAppDirSrc)) {
+          await fs2.emptyDir(defaultAppDirSrc);
         }
       }
       console.log(`

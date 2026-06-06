@@ -44,11 +44,6 @@ var package_default = {
   }
 };
 
-// src/commands/init.ts
-import { intro as intro2, outro as outro2, select, text as text2, spinner as spinner2 } from "@clack/prompts";
-import { execSync } from "child_process";
-import path2 from "path";
-
 // src/commands/add.ts
 import fs from "fs-extra";
 import path from "path";
@@ -107,6 +102,34 @@ async function addCommand(components, options) {
     }
     components = input.split(",").map((c) => c.trim());
   }
+  if ((components.includes("template-auth") || components.includes("service-auth")) && !options?.authProvider) {
+    const { select: select2, multiselect: multiselect2 } = await import("@clack/prompts");
+    const providerInput = await select2({
+      message: "Which authentication provider do you want to use?",
+      options: [
+        { value: "service-firebase-auth", label: "Firebase" },
+        { value: "service-supabase-auth", label: "Supabase (Mock)" },
+        { value: "service-api-auth", label: "Custom API (Mock)" }
+      ]
+    });
+    if (typeof providerInput !== "symbol") {
+      options = { ...options, authProvider: providerInput };
+    }
+    if (!options?.socialProviders && components.includes("template-auth")) {
+      const socialInput = await multiselect2({
+        message: "Which social login providers do you want to include?",
+        options: [
+          { value: "google", label: "Google" },
+          { value: "apple", label: "Apple" },
+          { value: "github", label: "GitHub" }
+        ],
+        required: false
+      });
+      if (typeof socialInput !== "symbol") {
+        options = { ...options, socialProviders: socialInput };
+      }
+    }
+  }
   const queue = [...components];
   const processed = /* @__PURE__ */ new Set();
   const npmDependencies = /* @__PURE__ */ new Set();
@@ -120,10 +143,7 @@ async function addCommand(components, options) {
       const item = await getRegistryComponent(component);
       s.stop(`Found ${component}!`);
       for (const file of item.files) {
-        let targetPath = path.resolve(targetCwd, "src", file.path);
-        if (file.path.startsWith("app/")) {
-          targetPath = path.resolve(targetCwd, file.path);
-        }
+        const targetPath = path.resolve(targetCwd, "src", file.path);
         await fs.ensureDir(path.dirname(targetPath));
         let shouldWrite = true;
         if (await fs.pathExists(targetPath) && !options?.skipPrompts) {
@@ -136,7 +156,24 @@ async function addCommand(components, options) {
           }
         }
         if (shouldWrite) {
-          await fs.writeFile(targetPath, file.content, "utf-8");
+          let finalContent = file.content;
+          if (item.name === "template-auth" && options?.socialProviders) {
+            const providers = options.socialProviders;
+            if (providers.length === 0) {
+              finalContent = finalContent.replace(/\{\/\*\s*IF_SOCIAL_AUTH_ANY\s*\*\/\}([\s\S]*?)\{\/\*\s*END_SOCIAL_AUTH_ANY\s*\*\/\}/g, "");
+            }
+            if (!providers.includes("google")) {
+              finalContent = finalContent.replace(/\{\/\*\s*IF_SOCIAL_AUTH_GOOGLE\s*\*\/\}([\s\S]*?)\{\/\*\s*END_SOCIAL_AUTH_GOOGLE\s*\*\/\}/g, "");
+            }
+            if (!providers.includes("apple")) {
+              finalContent = finalContent.replace(/\{\/\*\s*IF_SOCIAL_AUTH_APPLE\s*\*\/\}([\s\S]*?)\{\/\*\s*END_SOCIAL_AUTH_APPLE\s*\*\/\}/g, "");
+            }
+            if (!providers.includes("github")) {
+              finalContent = finalContent.replace(/\{\/\*\s*IF_SOCIAL_AUTH_GITHUB\s*\*\/\}([\s\S]*?)\{\/\*\s*END_SOCIAL_AUTH_GITHUB\s*\*\/\}/g, "");
+            }
+            finalContent = finalContent.replace(/\{\/\*\s*(IF|END)_SOCIAL_AUTH_[A-Z]+\s*\*\/\}\n?/g, "");
+          }
+          await fs.writeFile(targetPath, finalContent, "utf-8");
           console.log(`\u2705 Written ${file.path}`);
         } else {
           console.log(`\u23ED\uFE0F  Skipped ${file.path}`);
@@ -149,6 +186,11 @@ async function addCommand(components, options) {
           }
         }
       }
+      if (item.name === "service-auth" && options?.authProvider) {
+        if (!processed.has(options.authProvider) && !queue.includes(options.authProvider)) {
+          queue.push(options.authProvider);
+        }
+      }
       if (item.dependencies && item.dependencies.length > 0) {
         item.dependencies.forEach((d) => npmDependencies.add(d));
       }
@@ -157,10 +199,18 @@ async function addCommand(components, options) {
     }
   }
   if (npmDependencies.size > 0) {
+    const depsArray = Array.from(npmDependencies);
     console.log(`
-\u{1F4E6} Don't forget to install these dependencies:`);
-    console.log(`   pnpm add ${Array.from(npmDependencies).join(" ")}
+\u{1F4E6} Installing dependencies: ${depsArray.join(", ")}...`);
+    const { execSync: execSync2 } = await import("child_process");
+    try {
+      execSync2(`npx expo install ${depsArray.join(" ")}`, { stdio: "inherit", cwd: targetCwd });
+      console.log(`\u2705 Dependencies installed successfully!`);
+    } catch (err) {
+      console.error(`\u274C Failed to install dependencies. You can install them manually:`);
+      console.log(`   npx expo install ${depsArray.join(" ")}
 `);
+    }
   }
   if (!options?.skipPrompts) {
     outro(`Done!`);
@@ -168,6 +218,9 @@ async function addCommand(components, options) {
 }
 
 // src/commands/init.ts
+import { intro as intro2, outro as outro2, select, multiselect, text as text2, spinner as spinner2 } from "@clack/prompts";
+import { execSync } from "child_process";
+import path2 from "path";
 async function initCommand(options) {
   intro2(`Initializing NativeForge Project...`);
   let projectName = options.name;
@@ -192,6 +245,38 @@ async function initCommand(options) {
     if (typeof input === "symbol") process.exit(0);
     templateOption = input;
   }
+  let socialProviders = [];
+  let authProvider = "service-firebase-auth";
+  if (templateOption === "template-auth") {
+    if (process.env.CI_TEST) {
+      socialProviders = ["google", "apple"];
+      authProvider = "service-firebase-auth";
+    } else {
+      const providerInput = await select({
+        message: "Which authentication provider do you want to use?",
+        options: [
+          { value: "service-firebase-auth", label: "Firebase" },
+          { value: "service-supabase-auth", label: "Supabase (Mock)" },
+          { value: "service-api-auth", label: "Custom API (Mock)" }
+        ]
+      });
+      if (typeof providerInput !== "symbol") {
+        authProvider = providerInput;
+      }
+      const socialInput = await multiselect({
+        message: "Which social login providers do you want to include?",
+        options: [
+          { value: "google", label: "Google" },
+          { value: "apple", label: "Apple" },
+          { value: "github", label: "GitHub" }
+        ],
+        required: false
+      });
+      if (typeof socialInput !== "symbol") {
+        socialProviders = socialInput;
+      }
+    }
+  }
   const s = spinner2();
   s.start(`Creating Expo project ${projectName}... (this may take a minute)`);
   try {
@@ -199,16 +284,16 @@ async function initCommand(options) {
     s.stop(`Expo project ${projectName} created successfully!`);
     const projectDir = path2.resolve(process.cwd(), projectName);
     if (templateOption !== "none") {
-      console.log(`
-Adding ${templateOption} to your project...`);
-      await addCommand([templateOption], { cwd: projectDir, skipPrompts: true });
       if (templateOption === "template-auth") {
         const fs2 = await import("fs-extra");
-        const defaultAppDir = path2.join(projectDir, "app");
+        const defaultAppDir = path2.join(projectDir, "src", "app");
         if (await fs2.pathExists(defaultAppDir)) {
           await fs2.emptyDir(defaultAppDir);
         }
       }
+      console.log(`
+Adding ${templateOption} to your project...`);
+      await addCommand([templateOption], { cwd: projectDir, skipPrompts: true, socialProviders, authProvider });
     }
     outro2(`Your project is ready! Run: cd ${projectName} && npx expo start`);
   } catch (error) {
@@ -222,6 +307,12 @@ var { version } = package_default;
 var program = new Command();
 program.name("nativeforge").description("The ultimate CLI for scaffolding React Native and Expo architectures.").version(version);
 program.command("add [components...]").description("Add components to your project").action(addCommand);
-program.command("init").description("Initialize a new NativeForge project").option("-n, --name <name>", "Project name").option("-t, --template <template>", "Base template (e.g. template-login)").action(initCommand);
+program.command("init [name]").description("Initialize a new NativeForge project").option("-t, --template <template>", "Base template (e.g. template-auth)").action(async (name, options) => {
+  if (process.env.CI_TEST) {
+    name = "test";
+    options.template = "template-auth";
+  }
+  await initCommand({ name, ...options });
+});
 program.parse();
 //# sourceMappingURL=index.js.map

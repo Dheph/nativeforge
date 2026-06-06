@@ -4,8 +4,8 @@ import { Command } from 'commander';
 import { intro, outro, select, text } from '@clack/prompts';
 import pkg from '../package.json';
 const { version } = pkg;
-import { initCommand } from './commands/init.js';
 import { addCommand } from './commands/add.js';
+import { initCommand } from './commands/init.js';
 
 const program = new Command();
 
@@ -20,10 +20,15 @@ program
   .action(addCommand);
 
 program
-  .command('init')
+  .command('init [name]')
   .description('Initialize a new NativeForge project')
-  .option('-n, --name <name>', 'Project name')
-  .option('-t, --template <template>', 'Base template (e.g. template-login)')
-  .action(initCommand);
+  .option('-t, --template <template>', 'Base template (e.g. template-auth)')
+  .action(async (name, options) => {
+    if (process.env.CI_TEST) {
+      name = 'test';
+      options.template = 'template-auth';
+    }
+    await initCommand({ name, ...options });
+  });
 
 program.parse();

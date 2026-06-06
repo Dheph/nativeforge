@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Slot, useRouter, useSegments } from 'expo-router';
-import { useAuthStore } from '../src/services/firebase-auth';
+import { useAuthStore } from '../services/auth';
 
 export default function RootLayout() {
   const { user, initialized } = useAuthStore();

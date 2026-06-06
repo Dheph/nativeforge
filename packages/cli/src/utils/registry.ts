@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 const REGISTRY_URL =
   process.env.NATIVEFORGE_REGISTRY_URL ||
-  'https://raw.githubusercontent.com/dhephersonribeiro/nativeforge/main/packages/registry/dist';
+  'https://raw.githubusercontent.com/Dheph/nativeforge/main/packages/registry/dist';
 
 export const registryItemFileSchema = z.object({
   path: z.string(),

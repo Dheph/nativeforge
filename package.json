@@ -7,7 +7,9 @@
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
     "test": "turbo run test",
-    "clean": "turbo run clean"
+    "clean": "turbo run clean",
+    "nativeforge": "node packages/cli/dist/index.js",
+    "nativeforge:local": "NATIVEFORGE_REGISTRY_URL=http://localhost:8888 node packages/cli/dist/index.js"
   },
   "devDependencies": {
     "prettier": "^3.0.0",
